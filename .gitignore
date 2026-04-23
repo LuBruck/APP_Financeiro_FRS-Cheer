@@ -1,2 +1,8 @@
 tests/
 CLAUDE.md
+venv
+.venv
+env
+.env
+screts.toml
+secrets.toml 
