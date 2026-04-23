@@ -80,6 +80,57 @@ def append_row(sheet_name: str, row: dict[str, Any]) -> None:
     ws.append_row(values, value_input_option="USER_ENTERED")
 
 
+def update_row_by_id(
+    sheet_name: str,
+    id_column: str,
+    id_value: str,
+    updates: dict[str, Any],
+) -> None:
+    """Atualiza uma única linha identificada por `id_column = id_value`.
+
+    Faz 2 requests: 1 leitura (all_values) + 1 batch_update. Ajusta apenas
+    as colunas em `updates`, preservando as demais.
+    """
+    ws = get_worksheet(sheet_name)
+    all_values = ws.get_all_values()
+    if not all_values:
+        raise ValueError(f"Aba '{sheet_name}' vazia.")
+    headers = all_values[0]
+    try:
+        id_col_idx = headers.index(id_column)
+    except ValueError as e:
+        raise ValueError(f"Coluna '{id_column}' não existe em '{sheet_name}'.") from e
+
+    row_number = None
+    for i, row in enumerate(all_values[1:], start=2):
+        if len(row) > id_col_idx and row[id_col_idx] == id_value:
+            row_number = i
+            break
+    if row_number is None:
+        raise LookupError(f"{id_column}={id_value} não encontrado em '{sheet_name}'.")
+
+    data = []
+    for col, val in updates.items():
+        if col not in headers:
+            raise ValueError(f"Coluna '{col}' não existe em '{sheet_name}'.")
+        col_idx = headers.index(col)
+        a1 = gspread.utils.rowcol_to_a1(row_number, col_idx + 1)
+        data.append({"range": a1, "values": [[_to_sheet_value(val)]]})
+
+    if data:
+        ws.batch_update(data, value_input_option="USER_ENTERED")
+
+
+def append_rows(sheet_name: str, rows: list[dict[str, Any]]) -> None:
+    """Acrescenta várias linhas em 1 request (batch). Usado pela geração lazy."""
+    if not rows:
+        return
+    ws = get_worksheet(sheet_name)
+    headers = ws.row_values(1)
+    values = [[_to_sheet_value(r.get(h, "")) for h in headers] for r in rows]
+    ws.append_rows(values, value_input_option="USER_ENTERED")
+
+
 def _to_sheet_value(v: Any) -> Any:
     if isinstance(v, bool):
         return "TRUE" if v else "FALSE"
@@ -100,5 +151,7 @@ __all__ = [
     "preencher_auditoria_atualizacao",
     "read_all_records",
     "append_row",
+    "append_rows",
+    "update_row_by_id",
     "clear_reads_cache",
 ]
