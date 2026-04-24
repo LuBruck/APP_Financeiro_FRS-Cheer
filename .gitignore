@@ -6,3 +6,4 @@ env
 .env
 screts.toml
 secrets.toml 
+__pycache__/
