@@ -120,37 +120,6 @@ def gerar_pendencias_do_mes(mes_ref: str | None = None) -> int:
     return len(novas)
 
 
-def gerar_pendencias_para_membros(
-    ids_membros: list[str],
-    mes_ref: str,
-) -> tuple[int, int]:
-    """Cria cobranças pendentes para os membros selecionados no mês dado.
-
-    Pula membros que já têm registro no mês (idempotente).
-    Retorna (criados, pulados).
-    """
-    config = configuracoes_repo.carregar()
-    membros_map = {m.id_membro: m for m in membros_repo.listar_todos(incluir_inativos=False)}
-    existentes = {p.id_membro for p in pagamentos_repo.listar_por_mes(mes_ref)}
-
-    novas: list[dict] = []
-    pulados = 0
-    for id_membro in ids_membros:
-        if id_membro in existentes:
-            pulados += 1
-            continue
-        membro = membros_map.get(id_membro)
-        if membro:
-            novas.append(_build_linha_pendente(membro, mes_ref, config))
-
-    if novas:
-        pagamentos_repo.criar_varios(novas)
-        clear_reads_cache()
-        logger.info("geração em massa: %d criada(s), %d pulada(s) para %s", len(novas), pulados, mes_ref)
-
-    return len(novas), pulados
-
-
 def garantir_pendencias_sessao(mes_ref: str | None = None) -> None:
     """Chama `gerar_pendencias_do_mes` uma vez por sessão por mês (flag em session_state)."""
     mes_ref = mes_ref or fmt_mes_ref()
@@ -275,7 +244,6 @@ __all__ = [
     "esta_em_atraso",
     "garantir_pendencias_sessao",
     "gerar_pendencias_do_mes",
-    "gerar_pendencias_para_membros",
     "registrar_pagamento",
     "sugerir_multa",
 ]
