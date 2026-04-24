@@ -20,6 +20,64 @@ def _ano_from_mes(mes_referencia: str) -> int:
         raise ValueError(f"mes_referencia inválido: {mes_referencia!r}") from e
 
 
+def _ano_from_data(data_iso: str) -> int:
+    """'2026-03-15' -> 2026."""
+    try:
+        return int(data_iso.split("-")[0])
+    except (ValueError, IndexError) as e:
+        raise ValueError(f"data inválida: {data_iso!r}") from e
+
+
+def upload_comprovante_despesa(
+    *,
+    categoria: str,
+    data_iso: str,
+    descricao: str,
+    nome_arquivo_origem: str,
+    conteudo: bytes,
+) -> str:
+    """Sobe comprovante de despesa e retorna a URL.
+
+    Nome do arquivo: `{data}-{descricao-curta}.{ext}`
+    Pasta: `{ano}/despesas/{categoria}/`
+    """
+    ext = nome_arquivo_origem.rsplit(".", 1)[-1].lower() if "." in nome_arquivo_origem else "pdf"
+    descricao_curta = normalizar_nome(descricao)[:40]
+    nome = f"{data_iso}-{descricao_curta}.{ext}"
+    ano = _ano_from_data(data_iso)
+    return comprovantes_repo.upload(
+        tipo="despesas",
+        ano=ano,
+        subpasta=categoria,
+        nome_arquivo=nome,
+        conteudo=conteudo,
+    )
+
+
+def upload_comprovante_venda(
+    *,
+    produto: str,
+    data_iso: str,
+    nome_arquivo_origem: str,
+    conteudo: bytes,
+) -> str:
+    """Sobe comprovante de venda e retorna a URL.
+
+    Pasta: `{ano}/vendas/{produto-normalizado}/`
+    """
+    ext = nome_arquivo_origem.rsplit(".", 1)[-1].lower() if "." in nome_arquivo_origem else "pdf"
+    produto_slug = normalizar_nome(produto)[:40]
+    nome = f"{data_iso}-{produto_slug}.{ext}"
+    ano = _ano_from_data(data_iso)
+    return comprovantes_repo.upload(
+        tipo="vendas",
+        ano=ano,
+        subpasta=produto_slug,
+        nome_arquivo=nome,
+        conteudo=conteudo,
+    )
+
+
 def upload_comprovante_mensalidade(
     *,
     membro: Membro,
