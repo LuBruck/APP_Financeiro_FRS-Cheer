@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-import uuid
 from datetime import date
 from pathlib import Path
 
@@ -111,7 +110,6 @@ with aba_eventos:
                 st.error("Nome do evento é obrigatório.")
                 st.stop()
             evento_dict = {
-                "id_evento": str(uuid.uuid4()),
                 "nome": nome_ev.strip(),
                 "data": data_ev.isoformat(),
                 "receita_bruta": round(float(receita_ev), 2),
@@ -242,7 +240,6 @@ with aba_vendas:
             qtd = int(quantidade)
             v_unit = round(float(valor_unit), 2)
             venda_dict = {
-                "id_venda": str(uuid.uuid4()),
                 "data": data_venda.isoformat(),
                 "produto": produto.strip(),
                 "quantidade": qtd,

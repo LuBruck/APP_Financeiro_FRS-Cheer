@@ -12,7 +12,6 @@ e retornam dados; a UI chama estas funções, não os repositórios diretamente.
 from __future__ import annotations
 
 import logging
-import uuid
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -84,7 +83,6 @@ def _build_linha_pendente(
 ) -> dict:
     venc = calcular_data_vencimento(mes_ref, config.dia_vencimento)
     return {
-        "id_pagamento": str(uuid.uuid4()),
         "id_membro": membro.id_membro,
         "mes_referencia": mes_ref,
         "data_vencimento": venc.isoformat(),

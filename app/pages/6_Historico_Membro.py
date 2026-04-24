@@ -116,8 +116,8 @@ _STATUS_BG = {
 
 def _cor_status(row: pd.Series) -> list[str]:
     bg = _STATUS_BG.get(str(row["Status"]), "")
-    cor = f"background-color: {bg}" if bg else ""
-    return [cor] * len(row)
+    estilo = f"background-color: {bg}; color: #1a1a1a" if bg else ""
+    return [estilo] * len(row)
 
 
 st.dataframe(

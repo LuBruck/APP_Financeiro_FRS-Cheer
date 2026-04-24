@@ -14,6 +14,7 @@ from app.repositories.base import (
     read_all_records,
     update_row_by_id,
 )
+from app.utils.ids import proximo_id, proximos_ids
 
 
 @st.cache_data(ttl=300, show_spinner=False)
@@ -44,9 +45,15 @@ def get_by_id(id_pagamento: str) -> Pagamento | None:
     return None
 
 
+def _ids_existentes() -> list[str]:
+    return [p.id_pagamento for p in listar_todos()]
+
+
 def criar(pagamento: dict) -> None:
-    """Insere uma nova linha de pagamento (já com campos de auditoria)."""
-    row = preencher_auditoria_criacao(dict(pagamento))
+    """Insere uma nova linha de pagamento."""
+    novo = dict(pagamento)
+    novo["id_pagamento"] = proximo_id("PAG", _ids_existentes(), digitos=4)
+    row = preencher_auditoria_criacao(novo)
     append_row(SHEET_PAGAMENTOS, row)
 
 
@@ -54,7 +61,12 @@ def criar_varios(pagamentos: list[dict]) -> None:
     """Insere várias linhas em 1 request (usado pela geração lazy)."""
     if not pagamentos:
         return
-    rows = [preencher_auditoria_criacao(dict(p)) for p in pagamentos]
+    novos_ids = proximos_ids("PAG", _ids_existentes(), quantidade=len(pagamentos), digitos=4)
+    rows = []
+    for p, novo_id in zip(pagamentos, novos_ids):
+        novo = dict(p)
+        novo["id_pagamento"] = novo_id
+        rows.append(preencher_auditoria_criacao(novo))
     append_rows(SHEET_PAGAMENTOS, rows)
 
 

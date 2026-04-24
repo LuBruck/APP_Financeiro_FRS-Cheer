@@ -13,6 +13,7 @@ from app.repositories.base import (
     read_all_records,
     update_row_by_id,
 )
+from app.utils.ids import proximo_id
 
 
 @st.cache_data(ttl=300, show_spinner=False)
@@ -32,8 +33,15 @@ def get_by_id(id_despesa: str) -> Despesa | None:
     return None
 
 
+def proximo_id_despesa() -> str:
+    ids = [d.id_despesa for d in listar_todos()]
+    return proximo_id("D", ids, digitos=4)
+
+
 def criar(despesa: dict) -> None:
-    row = preencher_auditoria_criacao(dict(despesa))
+    novo = dict(despesa)
+    novo["id_despesa"] = proximo_id_despesa()
+    row = preencher_auditoria_criacao(novo)
     append_row(SHEET_DESPESAS, row)
 
 

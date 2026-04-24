@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-import uuid
 from datetime import date
 from pathlib import Path
 
@@ -130,7 +129,6 @@ if submitted:
             st.stop()
 
     despesa = {
-        "id_despesa": str(uuid.uuid4()),
         "data": data_despesa.isoformat(),
         "categoria": categoria,
         "descricao": descricao.strip(),

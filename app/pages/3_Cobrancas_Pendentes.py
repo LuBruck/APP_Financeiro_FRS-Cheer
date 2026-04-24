@@ -112,12 +112,12 @@ if filtrado.empty:
 def _cor_linha(row: pd.Series) -> list[str]:
     dias = row["Dias em atraso"]
     if dias == 0:
-        bg = "background-color: #e6f4ea"  # verde claro
+        estilo = "background-color: #e6f4ea; color: #1a1a1a"
     elif dias < 7:
-        bg = "background-color: #fff4e5"  # amarelo claro
+        estilo = "background-color: #fff4e5; color: #1a1a1a"
     else:
-        bg = "background-color: #fdecea"  # vermelho claro
-    return [bg] * len(row)
+        estilo = "background-color: #fdecea; color: #1a1a1a"
+    return [estilo] * len(row)
 
 
 exibicao = filtrado.drop(columns=["id_pagamento", "id_membro"]).copy()
