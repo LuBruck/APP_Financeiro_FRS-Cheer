@@ -30,8 +30,6 @@ def _authorized_users() -> dict[str, str]:
     try:
         from app.repositories import usuarios_repo
         ativos = usuarios_repo.listar_ativos()
-        print(ativos)
-
         if ativos:
             return ativos
     except Exception:
