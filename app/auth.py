@@ -22,6 +22,18 @@ Role = Literal["admin", "assistant"]
 
 
 def _authorized_users() -> dict[str, str]:
+    """Retorna {email: role} dos usuários autorizados.
+
+    Fonte primária: aba `usuarios` do Google Sheets (atualização em tempo real).
+    Fallback: seção [authorized_users] do secrets.toml (bootstrap ou emergência).
+    """
+    try:
+        from app.repositories import usuarios_repo
+        ativos = usuarios_repo.listar_ativos()
+        if ativos:
+            return ativos
+    except Exception:
+        pass
     return dict(st.secrets.get("authorized_users", {}))
 
 

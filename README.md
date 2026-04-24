@@ -154,26 +154,43 @@ Ao fazer merge na branch `main`, o Streamlit Cloud faz redeploy automático.
 
 ## Gestão de acesso
 
+Os usuários autorizados são gerenciados diretamente pelo app, na tela **Usuários** (só visível para admins). Não é necessário mexer no Streamlit Cloud para adicionar ou remover pessoas.
+
+### Setup inicial (uma vez só)
+
+1. Crie a aba `usuarios` na planilha com as colunas:
+   ```
+   email | role | ativo | criado_em | criado_por | atualizado_em | atualizado_por
+   ```
+2. Adicione uma linha inicial com seu próprio email:
+   ```
+   lucasbruck04@gmail.com | admin | TRUE
+   ```
+   (os campos de auditoria podem ficar vazios nessa linha inicial)
+3. Opcionalmente, mantenha seu email também em `[authorized_users]` no `secrets.toml` como fallback de emergência.
+
 ### Adicionar novo usuário
 
-1. No Streamlit Cloud, vá em **Settings → Secrets**.
-2. Adicione uma linha na seção `[authorized_users]`:
-   ```toml
-   "novo@email.com" = "assistant"
-   ```
-3. Salve — o Streamlit Cloud faz redeploy automático.
+1. Acesse o app → **Usuários** → **Adicionar usuário**
+2. Informe o email Google e o papel (admin ou assistente)
+3. Salve — o acesso é liberado em até 1 minuto (sem redeploy)
 
 ### Remover usuário (troca de diretoria)
 
-1. Remova a linha do e-mail em `[authorized_users]`.
-2. O acesso é revogado no próximo login do usuário.
+1. Acesse o app → **Usuários**
+2. Clique em **Desativar** ao lado do email
+3. O acesso é bloqueado na próxima sessão do usuário
+
+### Fallback (emergência)
+
+Se a aba `usuarios` estiver vazia ou inacessível, o app usa automaticamente `[authorized_users]` do `secrets.toml`. Isso garante que você nunca fique completamente travado.
 
 ### Transferência para o próximo diretor
 
-1. Adicione o e-mail do novo diretor como `"admin"` nos secrets.
-2. Remova o e-mail do diretor anterior.
-3. Transfira a senha do Google Cloud Console (ou remova o acesso de IAM do ex-diretor).
-4. O novo diretor acessa pelo link do app — sem treinamento de sistema necessário.
+1. Na tela Usuários, adicione o email do novo diretor como `admin`
+2. Desative o email do diretor anterior
+3. Atualize o `[authorized_users]` do secrets.toml também (fallback)
+4. O novo diretor acessa pelo link do app — sem treinamento de sistema necessário
 
 ---
 

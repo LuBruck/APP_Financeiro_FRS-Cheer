@@ -28,11 +28,11 @@ SHEET_DESPESAS = "despesas"
 SHEET_EVENTOS = "eventos"
 SHEET_VENDAS = "vendas_produtos"
 SHEET_CONFIGURACOES = "configuracoes"
+SHEET_USUARIOS = "usuarios"
 
 _SECOES_OBRIGATORIAS = [
     "google_service_account",
     "auth",
-    "authorized_users",
     "google_resources",
 ]
 
