@@ -60,14 +60,27 @@ with st.form("form_despesa", clear_on_submit=True):
         "Descrição",
         placeholder="Ex.: Passagem João SP-BH",
         max_chars=200,
+        help="Texto curto que identifica a despesa. Será usado no nome do arquivo no Drive.",
     )
-    valor = st.number_input("Valor (R$)", min_value=0.0, step=5.0, format="%.2f")
+    valor = st.number_input(
+        "Valor (R$)",
+        min_value=0.0,
+        step=5.0,
+        format="%.2f",
+        help="Valor total pago, em reais.",
+    )
     beneficiario = st.text_input(
         "Beneficiário",
         placeholder="Nome do coach, empresa, etc. (opcional)",
         max_chars=200,
+        help="Quem recebeu o pagamento (pessoa física ou empresa).",
     )
-    data_despesa = st.date_input("Data da despesa", value=date.today(), format="DD/MM/YYYY")
+    data_despesa = st.date_input(
+        "Data da despesa",
+        value=date.today(),
+        format="DD/MM/YYYY",
+        help="Data em que a despesa ocorreu ou foi paga.",
+    )
 
     evento_vinculado_label: str | None = None
     if categoria == "evento":

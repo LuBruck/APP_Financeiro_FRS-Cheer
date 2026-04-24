@@ -18,6 +18,7 @@ if str(_ROOT) not in sys.path:
 import streamlit as st  # noqa: E402
 
 from app.auth import get_role, render_sidebar_user, require_login  # noqa: E402
+from app.config import mostrar_erros_config_e_parar  # noqa: E402
 from app.repositories import membros_repo  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -29,6 +30,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+mostrar_erros_config_e_parar()
 require_login()
 render_sidebar_user()
 

@@ -29,6 +29,67 @@ SHEET_EVENTOS = "eventos"
 SHEET_VENDAS = "vendas_produtos"
 SHEET_CONFIGURACOES = "configuracoes"
 
+_SECOES_OBRIGATORIAS = [
+    "google_service_account",
+    "auth",
+    "authorized_users",
+    "google_resources",
+]
+
+_CAMPOS_SERVICE_ACCOUNT = ["type", "project_id", "private_key", "client_email"]
+_CAMPOS_AUTH = ["redirect_uri", "cookie_secret", "client_id", "client_secret", "server_metadata_url"]
+_CAMPOS_RESOURCES = ["spreadsheet_id", "drive_folder_id"]
+
+
+def validar_secrets() -> list[str]:
+    """Retorna lista de erros de configuração no secrets.toml. Vazia = OK."""
+    erros: list[str] = []
+    for secao in _SECOES_OBRIGATORIAS:
+        if secao not in st.secrets:
+            erros.append(f"Seção [{secao}] ausente no secrets.toml.")
+    if erros:
+        return erros
+
+    sa = st.secrets["google_service_account"]
+    for campo in _CAMPOS_SERVICE_ACCOUNT:
+        if not sa.get(campo):
+            erros.append(f"[google_service_account].{campo} está vazio ou ausente.")
+        # Detecta formato JSON colado em vez de TOML (valor começa com '{' ou '"type":')
+        if campo == "type" and str(sa.get("type", "")).startswith("{"):
+            erros.append(
+                "[google_service_account] parece estar no formato JSON em vez de TOML. "
+                "Cada campo deve usar `chave = \"valor\"`, não `\"chave\": \"valor\"`."
+            )
+
+    auth = st.secrets["auth"]
+    for campo in _CAMPOS_AUTH:
+        if not auth.get(campo):
+            erros.append(f"[auth].{campo} está vazio ou ausente.")
+    if len(str(auth.get("cookie_secret", ""))) < 32:
+        erros.append("[auth].cookie_secret deve ter pelo menos 32 caracteres.")
+
+    resources = st.secrets["google_resources"]
+    for campo in _CAMPOS_RESOURCES:
+        if not resources.get(campo):
+            erros.append(f"[google_resources].{campo} está vazio ou ausente.")
+
+    return erros
+
+
+def mostrar_erros_config_e_parar() -> None:
+    """Exibe erros de configuração na UI e para a execução."""
+    erros = validar_secrets()
+    if not erros:
+        return
+    st.error("**Configuração incompleta no secrets.toml.** Corrija os itens abaixo:")
+    for e in erros:
+        st.markdown(f"- {e}")
+    st.info(
+        "Consulte `.streamlit/secrets.toml.example` para o formato correto. "
+        "Cada campo deve usar `chave = \"valor\"` (TOML), não `\"chave\": \"valor\"` (JSON)."
+    )
+    st.stop()
+
 
 @lru_cache(maxsize=1)
 def _credentials() -> Credentials:

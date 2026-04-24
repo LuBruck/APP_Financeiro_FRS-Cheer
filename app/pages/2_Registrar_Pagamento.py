@@ -125,18 +125,26 @@ with st.form("form_pagamento", clear_on_submit=True):
         value=float(valor_devido),
         step=5.0,
         format="%.2f",
+        help="Valor recebido neste ato. Se parcial, o saldo restante continuará em aberto.",
     )
-    data_pag = st.date_input("Data do pagamento", value=hoje, format="DD/MM/YYYY")
+    data_pag = st.date_input(
+        "Data do pagamento",
+        value=hoje,
+        format="DD/MM/YYYY",
+        help="Data em que o PIX foi recebido (pode diferir da data de hoje).",
+    )
 
     observacoes = st.text_area(
         "Observações",
         placeholder="Obrigatório se o pagamento for parcial.",
+        help="Obrigatório quando o valor pago for menor que o total devido.",
     )
 
     comprovante = st.file_uploader(
         "Comprovante (PDF, PNG ou JPG)",
         type=["pdf", "png", "jpg", "jpeg"],
         accept_multiple_files=False,
+        help="Recomendado. O arquivo será salvo no Google Drive vinculado a este membro e mês.",
     )
 
     submitted = st.form_submit_button("Salvar pagamento", type="primary")

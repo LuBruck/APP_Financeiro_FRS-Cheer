@@ -1,9 +1,29 @@
-tests/
-CLAUDE.md
-venv
-.venv
-env
-.env
-screts.toml
-secrets.toml 
+# Dependências e ambientes virtuais
+venv/
+.venv/
+env/
 __pycache__/
+/__pycache__/
+*.py[cod]
+*.pyo
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Secrets — NUNCA commitar
+.streamlit/secrets.toml
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Distribuição Python
+dist/
+build/
+*.egg-info/
