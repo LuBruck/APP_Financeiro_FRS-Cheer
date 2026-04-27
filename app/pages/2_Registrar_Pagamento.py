@@ -38,7 +38,7 @@ config = configuracoes_repo.carregar()
 hoje = date.today()
 meses_opcoes: list[str] = []
 ano, mes = hoje.year, hoje.month
-for _ in range(12):
+for _ in range(36):
     meses_opcoes.append(f"{ano:04d}-{mes:02d}")
     mes -= 1
     if mes == 0:
