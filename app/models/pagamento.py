@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-StatusPagamento = Literal["pendente", "parcial", "pago", "cancelado"]
+StatusPagamento = Literal["pendente", "parcial", "pago", "cancelado", "avisado", "isento"]
 
 
 def _to_float(v: object, default: float = 0.0) -> float:

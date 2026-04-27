@@ -263,6 +263,16 @@ mypy app/
 
 ---
 
+## Backlog (próximas versões)
+
+Ideias levantadas durante o desenvolvimento, priorizadas para versões futuras:
+
+- **Grade de mensalidades — filtro por ano:** Permitir visualizar a situação de mensalidades de anos anteriores na grade do Dashboard. Exige resolver como filtrar quais membros estavam ativos em cada ano (membros podem sair e voltar), então a lógica de "ativo no período" precisa ser modelada antes de implementar.
+
+- **Registro de pagamento em lote:** Selecionar múltiplas cobranças de um mesmo membro na tela de Cobranças Pendentes e registrar o pagamento de todas de uma vez, com um único formulário e comprovante.
+
+---
+
 ## Licença
 
 MIT — ver `LICENSE`.

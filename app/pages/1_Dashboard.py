@@ -23,6 +23,15 @@ from app.repositories import (  # noqa: E402
 from app.services import calculo_dividas, dashboard_service  # noqa: E402
 from app.utils.formatters import formatar_brl, formatar_data_br, mes_referencia as fmt_mes  # noqa: E402
 
+_MESES_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+_COR_STATUS = {
+    "Pago":     "background-color: #c8e6c9; color: #1b5e20",
+    "Pendente": "background-color: #fff9c4; color: #856404",
+    "Multa":    "background-color: #ffcdd2; color: #b71c1c",
+    "Avisado":  "background-color: #bbdefb; color: #0d47a1",
+    "Isento":   "background-color: #f0f0f0; color: #757575",
+}
+
 st.set_page_config(page_title="Dashboard", page_icon="📊", layout="wide")
 require_login()
 render_sidebar_user()
@@ -156,3 +165,54 @@ if transacoes:
     )
 else:
     st.info("Nenhuma transação registrada ainda.")
+
+st.divider()
+
+# ─── Grade de mensalidades do ano ────────────────────────────────────
+st.subheader(f"Mensalidades {hoje.year}")
+
+membros_ativos_grade = sorted(
+    [m for m in membros if m.status == "ativo"],
+    key=lambda m: m.nome,
+)
+meses_ano = [f"{hoje.year}-{m:02d}" for m in range(1, 13)]
+
+# Indexar pagamentos do ano por membro e mês
+pag_index: dict[str, dict[str, object]] = {}
+for p in pagamentos:
+    if p.mes_referencia.startswith(str(hoje.year)):
+        pag_index.setdefault(p.id_membro, {})[p.mes_referencia] = p
+
+busca_grade = st.text_input("Filtrar por nome na grade", "", key="busca_grade_dash")
+
+grade_rows = []
+for m in membros_ativos_grade:
+    if busca_grade.strip() and busca_grade.strip().lower() not in m.nome.lower():
+        continue
+    row: dict = {"Nome": m.nome}
+    for mes_ref, label in zip(meses_ano, _MESES_LABELS):
+        p = pag_index.get(m.id_membro, {}).get(mes_ref)
+        row[label] = calculo_dividas.status_grade(p, hoje) if p else ""
+    grade_rows.append(row)
+
+if grade_rows:
+    df_grade = pd.DataFrame(grade_rows)
+
+    def _cor_celula(val: str) -> str:
+        return _COR_STATUS.get(val, "")
+
+    styler = df_grade.style
+    # compatível com pandas < 2.1 (applymap) e >= 2.1 (map)
+    _fn = getattr(styler, "map", None) or getattr(styler, "applymap")
+    styled = _fn(_cor_celula, subset=_MESES_LABELS)
+
+    st.dataframe(styled, use_container_width=True, hide_index=True)
+
+    leg = st.columns(5)
+    leg[0].markdown("🟢 **Pago**")
+    leg[1].markdown("🟡 **Pendente**")
+    leg[2].markdown("🔴 **Multa**")
+    leg[3].markdown("🔵 **Avisado**")
+    leg[4].markdown("⚫ **Isento**")
+else:
+    st.info("Nenhum membro ativo encontrado.")

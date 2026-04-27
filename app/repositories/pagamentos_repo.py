@@ -74,3 +74,11 @@ def atualizar(id_pagamento: str, updates: dict) -> None:
     """Atualiza colunas de uma linha existente."""
     payload = preencher_auditoria_atualizacao(dict(updates))
     update_row_by_id(SHEET_PAGAMENTOS, "id_pagamento", id_pagamento, payload)
+
+
+def desativar(id_pagamento: str) -> None:
+    """Soft delete: marca ativo=False e invalida cache."""
+    from app.repositories.base import clear_reads_cache
+    payload = preencher_auditoria_atualizacao({"ativo": False})
+    update_row_by_id(SHEET_PAGAMENTOS, "id_pagamento", id_pagamento, payload)
+    clear_reads_cache()

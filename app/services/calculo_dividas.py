@@ -67,6 +67,28 @@ def dias_em_atraso(data_vencimento: str | date, hoje: date | None = None) -> int
     return max(delta, 0)
 
 
+def status_grade(pagamento: Pagamento, hoje: date | None = None) -> str:
+    """Label de status para a célula da grade anual de mensalidades.
+
+    Retorna: 'Pago' | 'Pendente' | 'Multa' | 'Avisado' | 'Isento' | ''
+    'Multa' é inferido quando o pagamento está em atraso (vencido + não avisado).
+    """
+    s = pagamento.status
+    if s == "pago":
+        return "Pago"
+    if s == "isento":
+        return "Isento"
+    if s == "avisado":
+        return "Avisado"
+    if s == "cancelado":
+        return ""
+    # pendente ou parcial: verifica se já venceu
+    hoje = hoje or date.today()
+    if esta_em_atraso(pagamento.data_vencimento, hoje):
+        return "Multa"
+    return "Pendente"
+
+
 def calcular_status(valor_original: float, multa: float, valor_pago: float) -> StatusPagamento:
     total = valor_original + multa
     if valor_pago <= 0:
@@ -245,5 +267,6 @@ __all__ = [
     "garantir_pendencias_sessao",
     "gerar_pendencias_do_mes",
     "registrar_pagamento",
+    "status_grade",
     "sugerir_multa",
 ]
