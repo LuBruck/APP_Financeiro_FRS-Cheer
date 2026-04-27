@@ -12,6 +12,7 @@ __pycache__/
 
 # Secrets — NUNCA commitar
 .streamlit/secrets.toml
+scripts/client_secret*.json
 
 # IDEs
 .idea/

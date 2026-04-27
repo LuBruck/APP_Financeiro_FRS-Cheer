@@ -742,12 +742,28 @@ A distinção entre roles é armazenada em um dicionário nos secrets (ex: `{"di
 
 ### 8.3 Autenticação com Google APIs
 
-- **Service Account** criada no Google Cloud Console (conta isolada, não pessoal)
-- Escopos mínimos concedidos: `sheets.v4` (leitura/escrita) e `drive.v3` (escrita em pasta específica)
-- A planilha e a pasta do Drive são **compartilhadas com o email da Service Account** (como se fosse um colaborador)
-- Chave JSON da Service Account armazenada nos secrets do Streamlit Cloud (`st.secrets`)
-- **Nunca commitar a chave no Git.** `.gitignore` bloqueia qualquer arquivo `*.json` de credenciais
-- Revogação: se a chave for exposta, basta gerar nova chave no Google Cloud Console e atualizar os secrets
+A Camada 2 é dividida em duas identidades distintas, por restrição técnica do Google (ver §10.8):
+
+**Sheets — via Service Account.**
+
+- Service Account criada no Google Cloud Console (conta isolada, não pessoal)
+- Escopo mínimo: `https://www.googleapis.com/auth/spreadsheets`
+- Planilha compartilhada com o email da SA (como colaborador)
+- Chave JSON nos secrets do Streamlit Cloud (`[google_service_account]`)
+
+**Drive — via OAuth de conta institucional.**
+
+- Conta Google institucional dedicada (ex: `cheer.financeiro@gmail.com`) é dona da pasta raiz no Drive
+- Refresh token gerado uma única vez (script `scripts/gerar_refresh_token.py`) e armazenado em `[google_drive_oauth]` nos secrets
+- Escopo mínimo: `https://www.googleapis.com/auth/drive.file` (acesso apenas a arquivos criados pelo próprio app)
+- Os arquivos ficam de propriedade da conta institucional, **não** da SA nem dos usuários do app
+- Usuários (diretor/assistentes) **nunca** precisam da senha da conta institucional — o refresh token já guardado nos secrets autentica todos os uploads silenciosamente
+
+**Regras transversais:**
+
+- `.gitignore` bloqueia `secrets.toml` e `scripts/client_secret*.json`
+- Revogação da SA: nova chave no Cloud Console e atualizar secrets
+- Revogação do OAuth: trocar senha da conta institucional ou revogar em `myaccount.google.com/permissions`, depois rerodar o script de geração de refresh token
 
 ### 8.4 Ciclo de vida de acesso
 
@@ -947,6 +963,27 @@ Originalmente planejado estrutura simplificada (uma pasta por tipo, arquivos ide
 2. **Simplifica arquivamento.** Ao fim do ano, toda a estrutura anual pode ser movida em bloco.
 3. **Histórico de um membro é uma pasta.** Se alguém sai do time, baixar/compartilhar o histórico dele vira trivial.
 4. **Custo adicional de implementação é baixo.** Apenas a camada `comprovantes_repo.py` lida com criação dinâmica de pastas; o resto do código não muda.
+
+### 10.8 Por que upload no Drive usa OAuth de conta institucional, não a Service Account
+
+Originalmente planejado: a mesma Service Account autenticava Sheets e Drive. Na primeira tentativa de upload, a API do Drive retornou `403 storageQuotaExceeded`.
+
+**Causa.** Service Accounts em projetos Google Cloud associados a contas **Gmail comum** (sem Google Workspace pago) não têm cota de armazenamento própria. Compartilhar a pasta com a SA concede permissão de escrita, mas **não** empresta cota. Como o dono de qualquer arquivo criado via API é o autor da chamada (a SA), o upload é cobrado da cota da SA — que é zero — e falha. Pastas funcionam (ocupam 0 bytes); arquivos não.
+
+**Alternativas avaliadas:**
+
+1. **Shared Drive (Google Workspace).** Resolveria, mas exige plano pago — conflita com §2.5 ("não há orçamento para ferramentas pagas").
+2. **OAuth da conta pessoal de cada usuário logado.** Arquivos virariam propriedade do diretor/assistente atual; ao sair do time, o histórico iria junto. Conflita com §3.1 e §8.4 (transição limpa entre diretorias).
+3. **Trocar Drive por outro storage** (ex: Supabase). Resolveria a cota, mas quebraria a §10.7 (auditor/presidente perde a navegação humana direta no Drive). Adiada para o caminho de migração da §9.3.
+4. **OAuth de conta institucional dedicada** (escolhida). Conta Google comum criada exclusivamente para o time (`cheer.financeiro@gmail.com`), dona da pasta. App autentica via refresh token guardado nos secrets. Arquivos ficam na conta institucional → cota é dela (15 GB grátis) → upload funciona. Conta não é pessoal → não some quando o diretor sai. Refresh token gerado uma única vez no setup → assistentes nunca precisam da senha da conta.
+
+**Trade-offs aceitos:**
+
+- Setup do Sprint 0 ganha um passo extra: rodar `scripts/gerar_refresh_token.py` uma vez para popular `[google_drive_oauth]` nos secrets.
+- O OAuth consent screen no Google Cloud Console deve ser **publicado** (não em modo "Testing"), senão o refresh token expira em 7 dias. O escopo `drive.file` é considerado não-sensível, então a publicação é instantânea e dispensa verificação do Google.
+- Transição de diretoria passa a incluir a senha da conta institucional no bolo de credenciais repassadas (junto com Streamlit Cloud, GitHub, Google Cloud).
+
+A SA continua sendo usada para o Sheets, onde o problema de cota não existe (planilhas armazenadas no Drive de quem as criou; a SA só lê/escreve células).
 
 ---
 
