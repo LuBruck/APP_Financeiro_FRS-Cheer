@@ -27,9 +27,10 @@ render_sidebar_user()
 
 st.title("Registrar pagamento")
 
-membros = membros_repo.listar_todos(incluir_inativos=False)
-if not membros:
-    st.warning("Nenhum membro ativo cadastrado. Adicione membros na aba `membros`.")
+membros_ativos = membros_repo.listar_todos(incluir_inativos=False)
+membros_todos = membros_repo.listar_todos(incluir_inativos=True)
+if not membros_todos:
+    st.warning("Nenhum membro cadastrado. Adicione membros na aba `membros`.")
     st.stop()
 
 config = configuracoes_repo.carregar()
@@ -60,7 +61,11 @@ with tab_individual:
     membro_pre = qp.get("id_membro")
     mes_pre = qp.get("mes")
 
-    membros_map = {f"{m.nome} ({m.id_membro})": m for m in membros}
+    def _label(m):
+        sufixo = " — inativo" if m.status == "inativo" else ""
+        return f"{m.nome} ({m.id_membro}){sufixo}"
+
+    membros_map = {_label(m): m for m in membros_todos}
     default_label = None
     if membro_pre:
         for label, m in membros_map.items():
@@ -225,9 +230,9 @@ with tab_massa:
     opcoes_membros = [
         f"{m.nome} ({m.id_membro}) — {m.tipo}"
         + (" ✓ já lançado" if m.id_membro in existentes_no_mes else "")
-        for m in membros
+        for m in membros_ativos
     ]
-    ids_membros_ordem = [m.id_membro for m in membros]
+    ids_membros_ordem = [m.id_membro for m in membros_ativos]
 
     col_sel, col_btn = st.columns([4, 1])
     with col_btn:
@@ -252,7 +257,7 @@ with tab_massa:
     if ids_selecionados:
         novos = [i for i in ids_selecionados if i not in existentes_no_mes]
         pulados_prev = [i for i in ids_selecionados if i in existentes_no_mes]
-        membros_por_id = {m.id_membro: m for m in membros}
+        membros_por_id = {m.id_membro: m for m in membros_ativos}
 
         venc = calculo_dividas.calcular_data_vencimento(mes_massa, config.dia_vencimento)
 
