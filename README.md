@@ -267,10 +267,19 @@ mypy app/
 
 Ideias levantadas durante o desenvolvimento, priorizadas para versões futuras:
 
+
+- **Gerar cobranças Individuais:** Gerar cobranças de meses anteriores de maneira individual como é feito em massa
+
+- **Organizar melhor as abas:** Esta confuso oque esta cada faz e onde vou para pegar cada informaçao
+
 - **Grade de mensalidades — filtro por ano:** Permitir visualizar a situação de mensalidades de anos anteriores na grade do Dashboard. Exige resolver como filtrar quais membros estavam ativos em cada ano (membros podem sair e voltar), então a lógica de "ativo no período" precisa ser modelada antes de implementar.
 
 - **Registro de pagamento em lote:** Selecionar múltiplas cobranças de um mesmo membro na tela de Cobranças Pendentes e registrar o pagamento de todas de uma vez, com um único formulário e comprovante.
 
+
+- **Aba de vendas:** Aba para colocar a tabela de vendas de produtos, registrar nome/dados de qm comprou, onde seleciona se é atleta ou não, qual o valor do produto, custo dele, valor cobrado, dados do produto (camisa de treino, caneca etc).
+
+- **Aba de eventos:** ser mais personalizada, podendo colocar custo por item e ganho por ele ( ex:No evento da festa de hallowe teve custo com item de bebida corote, vendemos  R\$1000, talvez detalhes de por quanto vendemos, quantas vendemos etc. Decoração da festa: Tinta, custo \$50 )
 ---
 
 ## Licença

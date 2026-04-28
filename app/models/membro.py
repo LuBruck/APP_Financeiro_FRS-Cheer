@@ -26,7 +26,7 @@ class Membro:
             nome=row.get("nome", "").strip(),
             tipo=row.get("tipo", "atleta").strip() or "atleta",  # type: ignore[arg-type]
             email=row.get("email", "").strip(),
-            telefone=row.get("telefone", ""),
+            telefone=str(row.get("telefone", "") or "").strip(),
             semestre_entrada=row.get("semestre_entrada", "").strip(),
             status=row.get("status", "ativo").strip() or "ativo",  # type: ignore[arg-type]
             observacoes=row.get("observacoes", "").strip(),
