@@ -229,10 +229,11 @@ with tab_massa:
 
     opcoes_membros = [
         f"{m.nome} ({m.id_membro}) — {m.tipo}"
+        + (" — inativo" if m.status == "inativo" else "")
         + (" ✓ já lançado" if m.id_membro in existentes_no_mes else "")
-        for m in membros_ativos
+        for m in membros_todos
     ]
-    ids_membros_ordem = [m.id_membro for m in membros_ativos]
+    ids_membros_ordem = [m.id_membro for m in membros_todos]
 
     col_sel, col_btn = st.columns([4, 1])
     with col_btn:
@@ -257,7 +258,7 @@ with tab_massa:
     if ids_selecionados:
         novos = [i for i in ids_selecionados if i not in existentes_no_mes]
         pulados_prev = [i for i in ids_selecionados if i in existentes_no_mes]
-        membros_por_id = {m.id_membro: m for m in membros_ativos}
+        membros_por_id = {m.id_membro: m for m in membros_todos}
 
         venc = calculo_dividas.calcular_data_vencimento(mes_massa, config.dia_vencimento)
 

@@ -152,7 +152,7 @@ def gerar_pendencias_para_membros(
     Retorna (criados, pulados).
     """
     config = configuracoes_repo.carregar()
-    membros_map = {m.id_membro: m for m in membros_repo.listar_todos(incluir_inativos=False)}
+    membros_map = {m.id_membro: m for m in membros_repo.listar_todos(incluir_inativos=True)}
     existentes = {p.id_membro for p in pagamentos_repo.listar_por_mes(mes_ref)}
 
     novas: list[dict] = []

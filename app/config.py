@@ -30,6 +30,7 @@ SHEET_PAGAMENTOS = "pagamentos"
 SHEET_DESPESAS = "despesas"
 SHEET_EVENTOS = "eventos"
 SHEET_VENDAS = "vendas_produtos"
+SHEET_PRODUTOS = "produtos"
 SHEET_CONFIGURACOES = "configuracoes"
 SHEET_USUARIOS = "usuarios"
 
