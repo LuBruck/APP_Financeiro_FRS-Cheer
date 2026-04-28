@@ -269,8 +269,17 @@ with aba_vendas:
         novo_contato = st.text_input("Contato", value=v.contato_comprador)
         novas_obs = st.text_area("Observações", value=v.observacoes, height=80)
 
-        if v.link_comprovante:
-            st.markdown(f"[Ver comprovante atual]({v.link_comprovante})")
+        links_existentes = v.links_comprovantes
+        if links_existentes:
+            st.markdown(f"**Comprovantes já enviados ({len(links_existentes)}):**")
+            for i, link in enumerate(links_existentes, start=1):
+                st.markdown(f"- [Comprovante {i}]({link})")
+        novo_comprovante = st.file_uploader(
+            "Adicionar novo comprovante (opcional — útil pra parcelas)",
+            type=["pdf", "png", "jpg", "jpeg"],
+            accept_multiple_files=False,
+            key=f"edit_comprov_{v.id_venda}",
+        )
 
         st.divider()
         col_salvar, col_excluir = st.columns([3, 1])
@@ -283,6 +292,31 @@ with aba_vendas:
                 if not novo_comprador.strip():
                     st.error("Nome do comprador é obrigatório.")
                     return
+
+                novo_link_field = v.link_comprovante
+                if novo_comprovante is not None:
+                    try:
+                        with st.spinner("Enviando comprovante..."):
+                            sufixo = (
+                                f"part{len(links_existentes) + 1}" if links_existentes else ""
+                            )
+                            link_novo = upload_service.upload_comprovante_venda(
+                                comprador=novo_comprador,
+                                produto=v.produto,
+                                data_iso=nova_data.isoformat(),
+                                nome_arquivo_origem=novo_comprovante.name,
+                                conteudo=novo_comprovante.getvalue(),
+                                sufixo=sufixo,
+                            )
+                        novo_link_field = (
+                            f"{v.link_comprovante} | {link_novo}"
+                            if v.link_comprovante
+                            else link_novo
+                        )
+                    except Exception as e:
+                        st.error(f"Falha no upload: {e}")
+                        return
+
                 updates = {
                     "data": nova_data.isoformat(),
                     "quantidade": int(nova_qtd),
@@ -296,6 +330,7 @@ with aba_vendas:
                     "comprador": novo_comprador.strip(),
                     "contato_comprador": novo_contato.strip(),
                     "observacoes": novas_obs.strip(),
+                    "link_comprovante": novo_link_field,
                 }
                 try:
                     vendas_repo.atualizar(v.id_venda, updates)
@@ -573,6 +608,7 @@ with aba_vendas:
                 try:
                     with st.spinner("Enviando comprovante..."):
                         link_comp_venda = upload_service.upload_comprovante_venda(
+                            comprador=comprador_nome,
                             produto=produto_escolhido.nome,
                             data_iso=data_venda.isoformat(),
                             nome_arquivo_origem=comprovante_venda.name,

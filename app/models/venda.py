@@ -61,6 +61,13 @@ class Venda:
             return "parcial"
         return "pendente"
 
+    @property
+    def links_comprovantes(self) -> list[str]:
+        """Múltiplos comprovantes (parcelas) ficam separados por ' | ' no campo."""
+        if not self.link_comprovante:
+            return []
+        return [s.strip() for s in self.link_comprovante.split("|") if s.strip()]
+
     @classmethod
     def from_row(cls, row: dict[str, object]) -> "Venda":
         qtd = _to_int(row.get("quantidade"), 1)

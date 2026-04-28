@@ -56,23 +56,29 @@ def upload_comprovante_despesa(
 
 def upload_comprovante_venda(
     *,
+    comprador: str,
     produto: str,
     data_iso: str,
     nome_arquivo_origem: str,
     conteudo: bytes,
+    sufixo: str = "",
 ) -> str:
     """Sobe comprovante de venda e retorna a URL.
 
-    Pasta: `{ano}/vendas/{produto-normalizado}/`
+    Pasta: `{ano}/vendas/{comprador-normalizado}/`
+    Nome: `{data}-{produto-slug}[-sufixo].{ext}`. Use `sufixo` para diferenciar
+    múltiplos comprovantes (parcelas) da mesma venda.
     """
     ext = nome_arquivo_origem.rsplit(".", 1)[-1].lower() if "." in nome_arquivo_origem else "pdf"
-    produto_slug = normalizar_nome(produto)[:40]
-    nome = f"{data_iso}-{produto_slug}.{ext}"
+    comprador_slug = normalizar_nome(comprador)[:40] or "sem-comprador"
+    produto_slug = normalizar_nome(produto)[:40] or "produto"
+    sufixo_str = f"-{normalizar_nome(sufixo)}" if sufixo else ""
+    nome = f"{data_iso}-{produto_slug}{sufixo_str}.{ext}"
     ano = _ano_from_data(data_iso)
     return comprovantes_repo.upload(
         tipo="vendas",
         ano=ano,
-        subpasta=produto_slug,
+        subpasta=comprador_slug,
         nome_arquivo=nome,
         conteudo=conteudo,
     )
