@@ -19,11 +19,12 @@ from app.repositories.base import clear_reads_cache  # noqa: E402
 from app.services import calculo_dividas, upload_service  # noqa: E402
 from app.utils.formatters import formatar_brl, formatar_data_br  # noqa: E402
 
-st.set_page_config(page_title="Cobranças Pendentes", page_icon="📋", layout="wide")
+st.set_page_config(page_title="Cobranças", page_icon="📋", layout="wide")
 require_login()
 render_sidebar_user()
 
-st.title("Cobranças Pendentes")
+st.title("Cobranças")
+st.caption("Visualize e edite mensalidades — em aberto por padrão, com opção de ver pagas/isentas/canceladas.")
 
 with st.spinner("Verificando cobranças do mês..."):
     calculo_dividas.garantir_pendencias_sessao()
@@ -35,17 +36,45 @@ if st.session_state.pop("_cobranca_excluida", False):
     st.success("Cobrança excluída.")
 
 # ─── Carregamento de dados ───────────────────────────────────────────
-STATUS_VISIVEIS = {"pendente", "parcial", "avisado"}
-pagamentos_ativos = [p for p in pagamentos_repo.listar_todos() if p.status in STATUS_VISIVEIS]
+STATUS_EM_ABERTO = {"pendente", "parcial", "avisado"}
+TODOS_OS_STATUS = ["pendente", "parcial", "avisado", "pago", "isento", "cancelado"]
+todos_pagamentos = pagamentos_repo.listar_todos()
 membros_por_id = {m.id_membro: m for m in membros_repo.listar_todos(incluir_inativos=True)}
 
-if not pagamentos_ativos:
-    st.success("Nenhuma cobrança em aberto.")
+if not todos_pagamentos:
+    st.success("Nenhuma cobrança cadastrada.")
     st.stop()
 
 hoje = date.today()
+
+# ─── Filtros ─────────────────────────────────────────────────────────
+c1, c2, c3, c4 = st.columns([2, 1, 1, 2])
+busca = c1.text_input("Buscar por nome", "")
+tipo_filtro = c2.radio("Tipo de membro", ["Todos", "atleta", "associado"], horizontal=False)
+status_membro_filtro = c3.radio(
+    "Status do membro", ["Ativos", "Inativos", "Todos"], horizontal=False
+)
+modo_visualizacao = c4.radio(
+    "Mostrar",
+    ["Em aberto", "Todas", "Filtrar por status"],
+    horizontal=True,
+    help="'Em aberto' = pendente/parcial/avisado. 'Todas' inclui pago/isento/cancelado.",
+)
+status_selecionados: set[str]
+if modo_visualizacao == "Em aberto":
+    status_selecionados = STATUS_EM_ABERTO
+elif modo_visualizacao == "Todas":
+    status_selecionados = set(TODOS_OS_STATUS)
+else:
+    escolhidos = st.multiselect(
+        "Status", TODOS_OS_STATUS, default=list(STATUS_EM_ABERTO), key="filtro_status_cobr"
+    )
+    status_selecionados = set(escolhidos) or STATUS_EM_ABERTO
+
 itens: list[dict] = []
-for p in pagamentos_ativos:
+for p in todos_pagamentos:
+    if p.status not in status_selecionados:
+        continue
     m = membros_por_id.get(p.id_membro)
     if m is None:
         continue
@@ -58,18 +87,17 @@ for p in pagamentos_ativos:
     )
 
 if not itens:
-    st.success("Nenhuma cobrança em aberto.")
+    st.info("Nenhuma cobrança corresponde aos filtros.")
     st.stop()
-
-# ─── Filtros ─────────────────────────────────────────────────────────
-c1, c2 = st.columns([3, 1])
-busca = c1.text_input("Buscar por nome", "")
-tipo_filtro = c2.radio("Tipo de membro", ["Todos", "atleta", "associado"], horizontal=True)
 
 if busca.strip():
     itens = [i for i in itens if busca.strip().lower() in i["membro"].nome.lower()]
 if tipo_filtro != "Todos":
     itens = [i for i in itens if i["membro"].tipo == tipo_filtro]
+if status_membro_filtro == "Ativos":
+    itens = [i for i in itens if i["membro"].status == "ativo"]
+elif status_membro_filtro == "Inativos":
+    itens = [i for i in itens if i["membro"].status == "inativo"]
 
 # ─── Métricas ────────────────────────────────────────────────────────
 total_aberto = sum(i["pagamento"].saldo_devedor for i in itens)
@@ -225,8 +253,9 @@ for id_membro, cobr_list in membros_ordenados:
     seta = "▼" if expandido else "▶"
 
     row_nome, row_total = st.columns([5, 1])
+    sufixo_inativo = " — inativo" if membro.status == "inativo" else ""
     if row_nome.button(
-        f"{seta}  {membro.nome}  · {n} pendência(s)",
+        f"{seta}  {membro.nome}{sufixo_inativo}  · {n} pendência(s)",
         key=f"toggle_{id_membro}",
         use_container_width=True,
         type="tertiary",
